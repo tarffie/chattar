@@ -79,6 +79,7 @@ services:
     ports:
       - "4000:4000"
     env_file:
+      - ./services/backend/.env
       - ./.env # Root env vars (Mongo creds)
     environment:
       - NODE_ENV=development
