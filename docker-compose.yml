@@ -1,0 +1,146 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: chattar-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    env_file:
+      - ./.env
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - chattar-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: chattar-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - chattar-network
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: chattar-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+    networks:
+      - chattar-network
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: chattar-promtail
+    restart: unless-stopped
+    volumes:
+      - /var/log:/var/log
+      - ./loki/promtail-config.yaml:/etc/promtail/config.yaml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - chattar-network
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: chattar-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./loki/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    networks:
+      - chattar-network
+    depends_on:
+      - loki
+
+  # Backend - Express + TypeScript + Socket.io (Bun)
+  backend:
+    build:
+      context: ./services/backend # New: Subdir context
+      dockerfile: Dockerfile
+    container_name: chattar-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./.env # Root env vars (Mongo creds)
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=http://localhost:5173
+      - MONGO_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_DATABASE=${MONGO_INITDB_DATABASE}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+    volumes:
+      - ./services/backend:/workspace/services/backend # Hot-reload
+      - ./shared:/workspace/shared # Shared types
+      - /workspace/services/backend/node_modules # Avoid host conflict
+    networks:
+      - chattar-network
+    depends_on:
+      - mongodb
+      - redis
+      - loki
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend - React + TypeScript + Vite (Bun)
+  frontend:
+    build:
+      context: ./services/frontend # New: Subdir context
+      dockerfile: Dockerfile
+    container_name: chattar-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:4000
+      - VITE_WS_URL=ws://localhost:4000
+    volumes:
+      - ./services/frontend:/workspace/services/frontend # Hot-reload
+      - ./shared:/workspace/shared # If using shared
+      - ./package.json:/workspace/package.json # Root package if needed
+      - ./bun.lockb:/workspace/bun.lockb
+      - /workspace/services/frontend/node_modules # Avoid host node_modules conflict
+    networks:
+      - chattar-network
+    depends_on:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  chattar-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:
+  loki_data:
+  grafana_data:
+  workspace_node_modules:

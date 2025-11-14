@@ -1,0 +1,34 @@
+Planning.md
+# Dependencies
+node_modules/
+vendor/
+
+# Environment
+chattar.env
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Docker volumes
+mongodb_data/
+redis_data/
+loki_data/
+grafana_data/
