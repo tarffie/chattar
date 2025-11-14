@@ -4,7 +4,11 @@
   "workspaces": {
     "": {
       "name": "chattar",
+      "dependencies": {
+        "jsonwebtoken": "^9.0.2",
+      },
       "devDependencies": {
+        "@types/jsonwebtoken": "^9.0.10",
         "concurrently": "^8.2.2",
         "eslint": "^9.39.1",
         "typescript": "~5.9.3",

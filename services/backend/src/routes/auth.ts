@@ -1,8 +1,13 @@
 import { Router } from "express";
 import { registerUser } from "../services/userService";
-import jwt from 'jsonwebtoken'; // For token later
+import jwt from "jsonwebtoken"; 
+import User from "../models/User";
 
 const router = Router();
+
+const users = await User.find();
+router.get("/users", (req, res) => res.json({ok: true, users }))
+router.get("/test", (req, res) => res.json({ ok: true }));
 
 router.post("/register", async (req, res) => {
   try {

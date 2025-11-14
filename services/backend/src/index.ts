@@ -18,8 +18,10 @@ const io = new Server(server, {
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-// Basic route (test it!)
 app.get("/", (req, res) => res.send("Chattar Backend Live!"));
+
+import authRoutes from './routes/auth'
+app.use('/api/auth', authRoutes);
 
 // TODO: Import and use routes, e.g.:
 // import authRoutes from './routes/auth.js';

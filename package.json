@@ -20,9 +20,13 @@
     "type-check": "bunx tsc --noEmit"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "concurrently": "^8.2.2",
     "eslint": "^9.39.1",
     "typescript": "~5.9.3"
   },
-  "packageManager": "bun@1.3.0"
+  "packageManager": "bun@1.3.0",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
 }
