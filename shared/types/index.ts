@@ -1,8 +1,21 @@
 export interface User {
   id: string;
   username: string;
+  email?: string;
   publicKey: string;
+  status: "online" | "offline" | "busy";
   createdAt: Date;
+}
+
+export interface CreateUserPayload {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
 }
 
 export interface Message {
@@ -26,5 +39,3 @@ export interface PresenceStatus {
   online: boolean;
   lastSeen?: Date;
 }
-
-  
