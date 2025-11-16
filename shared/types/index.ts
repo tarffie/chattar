@@ -7,6 +7,16 @@ export interface User {
   createdAt: Date;
 }
 
+export interface RefreshToken {
+  userId: string;
+  token: string;
+  expiresAt?: Date; 
+  deviceInfo?: string;
+  ipAddress?: string;
+  createdAt?: Date;
+  lastUsedAt?: Date;
+}
+
 export interface CreateUserPayload {
   username: string;
   email: string;

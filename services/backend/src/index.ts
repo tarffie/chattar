@@ -23,11 +23,6 @@ app.get("/", (req, res) => res.send("Chattar Backend Live!"));
 import authRoutes from './routes/auth'
 app.use('/api/auth', authRoutes);
 
-// TODO: Import and use routes, e.g.:
-// import authRoutes from './routes/auth.js';
-// app.use('/api/auth', authRoutes);
-
-// Socket.io (basic for now; add auth later)
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
   socket.on("disconnect", () => console.log("User disconnected:", socket.id));

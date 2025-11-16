@@ -11,7 +11,7 @@ async function hashPassword(password: string) {
 const RegisterUserSchema = z.object({
   username: z.string().min(3).max(20),
   informedPassword: z.string().min(6),
-  email: z.string().email(),
+  email: z.email(),
   publicKey: z.string().min(40), // Rough check for base64 length
 });
 
@@ -24,7 +24,6 @@ const registerUser = async (userInput: {
   try {
     const validated = RegisterUserSchema.parse(userInput);
     if (!validated) throw new Error("The provided user input wasn't valid.");
-    await connectDB();
 
     const { username, informedPassword, email, publicKey } = userInput;
     const hashedPassword = await hashPassword(informedPassword);
@@ -40,15 +39,45 @@ const registerUser = async (userInput: {
     await newUser.save();
     const { password, ...safeUser } = newUser.toJSON();
     return { success: true, user: safeUser };
-  } catch (e) {
-    if (e instanceof z.ZodError) {
-      throw new Error(`Validation failed: ${e.message}`);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Error(`Validation failed: ${error.message}`);
     }
-    const { message } = e as Error;
+    const { message } = error as Error;
     throw new Error(
       `An error ocurred while storing user on database: ${message}`,
     );
   }
 };
 
-export { registerUser };
+const findUser = async (identification: string) => {
+  return await User.findOne({
+    $or: [{ username: identification }, { email: identification }],
+  });
+};
+
+const loginUser = async (user: { username: string; password: string }) => {
+  try {
+    const userData = await findUser(user.username);
+
+    if (!userData) {
+      throw new Error("Invalid username, email or password");
+    }
+
+    const isPasswordValid = await Bun.password.verify(
+      user.password,
+      userData.password,
+    );
+
+    if (isPasswordValid) {
+      return { success: true, user: userData };
+    }
+
+    throw new Error("Invalid username, email or password");
+  } catch (error) {
+    const { message } = error as Error;
+    throw new Error(`Authentication failed: ${message}`);
+  }
+};
+
+export { registerUser, findUser, loginUser };
