@@ -24,7 +24,7 @@ export const storeRefreshToken = async ({
   });
 };
 
-export const findRefreshToken = async (token: string) => {
+export const getRefreshToken = async (token: string) => {
   return await RefreshToken.findOne({ token });
 };
 

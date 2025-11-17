@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { registerUser, getUserById, loginUser } from "../services/userService";
 import jwt from "jsonwebtoken";
-import { storeRefreshToken } from "../services/tokenService";
+import { storeRefreshToken, getRefreshToken } from "../services/tokenService";
 
 const router = Router();
 
@@ -42,6 +42,45 @@ router.get("/me", async (req, res) => {
     }
     const { message } = error as Error;
     return res.status(401).json({ error: message });
+  }
+});
+
+router.post("/refresh", async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: "Invalid token type" });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as {
+      userId: string;
+    };
+
+    const storedToken = await getRefreshToken(refreshToken);
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      return res
+        .status(401)
+        .json({ error: "Invalid or expired refresh token" });
+    }
+
+    const newAccessToken = jwt.sign(
+      { userId: decoded.userId },
+      process.env.JWT_SECRET!,
+      { expiresIn: "15m" },
+    );
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    return res.status(401).json({ error: "Invalid refresh token" });
   }
 });
 
