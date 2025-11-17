@@ -21,13 +21,10 @@ const RefreshTokenSchema = new Schema<IRefreshToken>({
   token: {
     type: String,
     required: true,
-    unique: true,
-    index: true,
   },
   expiresAt: {
     type: Date,
     required: true,
-    index: true,
   },
   deviceInfo: {
     type: String,
@@ -45,8 +42,17 @@ const RefreshTokenSchema = new Schema<IRefreshToken>({
   },
 });
 
+RefreshTokenSchema.index(
+  { token: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { expiresAt: { $gte: new Date() } },
+  },
+);
+
 RefreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+RefreshTokenSchema.index({ userId: 1, token: 1 });
 export default mongoose.model<IRefreshToken>(
   "RefreshToken",
   RefreshTokenSchema,
