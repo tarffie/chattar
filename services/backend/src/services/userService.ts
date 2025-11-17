@@ -50,6 +50,12 @@ const registerUser = async (userInput: {
   }
 };
 
+const getUserById = async (id: string) => {
+  return await User.findOne({
+    _id: id,
+  });
+};
+
 const findUser = async (identification: string) => {
   return await User.findOne({
     $or: [{ username: identification }, { email: identification }],
@@ -80,4 +86,4 @@ const loginUser = async (user: { username: string; password: string }) => {
   }
 };
 
-export { registerUser, findUser, loginUser };
+export { registerUser, getUserById, loginUser };

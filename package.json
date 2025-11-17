@@ -8,6 +8,7 @@
     "shared/*"
   ],
   "scripts": {
+		"install:backend": "bun install --cwd services/backend",
     "dev": "docker compose up",
     "dev:build": "docker compose up --build",
     "down": "docker compose down",

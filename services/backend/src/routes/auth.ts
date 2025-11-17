@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, findUser, loginUser } from "../services/userService";
+import { registerUser, getUserById, loginUser } from "../services/userService";
 import jwt from "jsonwebtoken";
 import { storeRefreshToken } from "../services/tokenService";
 
@@ -8,6 +8,42 @@ const router = Router();
 router.get("/health", (req, res) =>
   res.json({ ok: true, message: "the authentication api is working properly" }),
 );
+
+router.get("/me", async (req, res) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+
+    if (!accessToken) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as {
+      userId: string;
+    };
+
+    const user = await getUserById(decoded.userId);
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        publicKey: user.publicKey,
+      },
+    });
+  } catch (error) {
+    // fallback when not authenticated
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ error: "Token expired" });
+    }
+    const { message } = error as Error;
+    return res.status(401).json({ error: message });
+  }
+});
 
 router.post("/register", async (req, res) => {
   try {
@@ -47,7 +83,7 @@ router.post("/register", async (req, res) => {
         ipAddress: req.ip,
       });
 
-      res.cookie("acessToken", accessToken, {
+      res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",

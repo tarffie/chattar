@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/database.js"; // DB import
@@ -15,9 +16,9 @@ const io = new Server(server, {
   cors: { origin: "http://localhost:5173" },
 });
 
+app.use(cookieParser());
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
-
 app.get("/", (req, res) => res.send("Chattar Backend Live!"));
 
 import authRoutes from './routes/auth'
