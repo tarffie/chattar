@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { HomeButton } from "../components/HomeButton";
+import { LoginForm } from "../components/LoginForm";
+import { login } from "../utils/authUtils"
 
 export const Home = () => {
   const [loginOrRegister, setLoginOrRegister] = useState("Login");
@@ -7,7 +9,7 @@ export const Home = () => {
   return (
     <>
       <h1> Hello, world guest </h1>
-      <div>
+			<div className="buttonRow">
         <HomeButton
           index={"loginButton"}
           callbackFn={() => setLoginOrRegister("Login")}
@@ -22,6 +24,7 @@ export const Home = () => {
         </HomeButton>
         <p> {loginOrRegister} </p>
       </div>
+			<LoginForm onLogin={login} />
     </>
   );
 };
