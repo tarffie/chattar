@@ -16,8 +16,8 @@ function App() {
         const response = await fetch("/api/auth/me", {
           credentials: "include",
         });
-
-        if (response.ok) {
+				
+				if (response.ok) {
           const userData = await response.json();
           setUser(userData);
           setIsAuthenticated(true);

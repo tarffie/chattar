@@ -22,6 +22,19 @@ const registerUser = async (userInput: {
   publicKey: string;
 }) => {
   try {
+    const existingUser = await User.findOne({
+      $or: [{ username: userInput.username }, { email: userInput.email }],
+    });
+
+    if (existingUser) {
+      if (existingUser.username === userInput.username) {
+        throw new Error("Username already taken");
+      }
+      if (existingUser.email === userInput.email) {
+        throw new Error("Email already registered");
+      }
+    }
+
     const validated = RegisterUserSchema.parse(userInput);
     if (!validated) throw new Error("The provided user input wasn't valid.");
 
