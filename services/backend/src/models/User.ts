@@ -1,9 +1,18 @@
-import mongoose, { Schema, Document, type HydratedDocument } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import type { User } from "../../../../shared/types/index";
 
 export interface IUser extends Document, Omit<User, "id"> {
   password: string;
 }
+
+const DeviceKeySchema = new Schema(
+  {
+    publicKey: { type: String, required: true },
+    deviceId: { type: String, required: true },
+    addedAt: { type: Date, required: true, default: Date.now },
+  },
+  { _id: false },
+);
 
 const UserSchema: Schema = new Schema(
   {
@@ -11,9 +20,10 @@ const UserSchema: Schema = new Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     publicKey: { type: String, required: true },
+    deviceKeys: { type: [DeviceKeySchema], default: [] },
     status: {
       type: String,
-      enum: ["online", "offline", "away"],
+      enum: ["online", "offline", "busy"],
       default: "offline",
     },
   },

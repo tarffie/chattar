@@ -1,4 +1,4 @@
-import { generateKeypair, storePrivateKey } from "./cryptoUtils";
+import { generateKeypair, getPrivateKey, storePrivateKey } from "./cryptoUtils";
 
 /**
  * Receives two strings and sends a request to the login endpoint
@@ -21,6 +21,24 @@ export const login = async (
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new Error(data.error || "Login failed");
+  }
+
+  const { user } = await response.json();
+
+  const existingKey = await getPrivateKey(user.id);
+
+  if (!existingKey) {
+    const { publicKey, privateKey } = await generateKeypair();
+    await fetch("/api/auth/add-device-key", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ publicKey }),
+    });
+		
+		await storePrivateKey(user.id, privateKey);
   }
 };
 

@@ -3,6 +3,11 @@ export interface User {
   username: string;
   email?: string;
   publicKey: string;
+  deviceKeys?: Array<{
+    publicKey: string;
+    deviceId: string;
+    addedAt: Date;
+  }>;
   status: "online" | "offline" | "busy";
   createdAt: Date;
 }
@@ -10,7 +15,7 @@ export interface User {
 export interface RefreshToken {
   userId: string;
   token: string;
-  expiresAt?: Date; 
+  expiresAt?: Date;
   deviceInfo?: string;
   ipAddress?: string;
   createdAt?: Date;

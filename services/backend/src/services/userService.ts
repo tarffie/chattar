@@ -69,6 +69,39 @@ const getUserById = async (id: string) => {
   });
 };
 
+const updateUserKeys = async (
+  userId: string,
+  publicKey: string,
+): Promise<void> => {
+  try {
+    const result = await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          deviceKeys: {
+            publicKey,
+            deviceId: crypto.randomUUID(),
+            addedAt: new Date(),
+          },
+        },
+      },
+      { new: true },
+    );
+
+    if (!result) {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    const { message } = error as Error;
+
+    if (message.includes("User not found")) {
+      throw error;
+    }
+
+    throw new Error("Failed to update user keys");
+  }
+};
+
 const findUser = async (identification: string) => {
   return await User.findOne({
     $or: [{ username: identification }, { email: identification }],
@@ -99,4 +132,4 @@ const loginUser = async (user: { username: string; password: string }) => {
   }
 };
 
-export { registerUser, getUserById, loginUser };
+export { registerUser, getUserById, loginUser, updateUserKeys };

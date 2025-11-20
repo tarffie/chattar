@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { registerUser, getUserById, loginUser } from "../services/userService";
+import {
+  registerUser,
+  getUserById,
+  loginUser,
+  updateUserKeys,
+} from "../services/userService";
 import jwt from "jsonwebtoken";
 import { storeRefreshToken, getRefreshToken } from "../services/tokenService";
 
@@ -42,6 +47,39 @@ router.get("/me", async (req, res) => {
     }
     const { message } = error as Error;
     return res.status(401).json({ error: message });
+  }
+});
+
+router.post("/add-device-key", async (req, res) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+
+    if (!accessToken) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as {
+      userId: string;
+    };
+
+    const { publicKey } = req.body;
+
+    if (!publicKey) {
+      return res.status(400).json({ error: "Public key is required" });
+    }
+
+    await updateUserKeys(decoded.userId, publicKey);
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    const { message } = error as Error;
+    console.error("Add device key error:", message); // Log for debugging
+
+    if (message.includes("jwt")) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    return res.status(500).json({ error: "Failed to add device key" });
   }
 });
 
