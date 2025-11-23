@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+
 interface AuthFormProps {
   mode: "Login" | "Register";
   onLogin: (identification: string, password: string) => Promise<void>;
@@ -10,6 +11,15 @@ interface AuthFormProps {
   ) => Promise<void | string>;
 }
 
+/**
+ * Compoment with adaptble form, receiving through invocation which code to return
+ * Then applying callback functions to respective mode
+ * @param {string} mode if it should return login or registration code
+ * @param {function} onLogin action function to run on login attempt
+ * @param {function} onRegister action function to run on register attempt
+ * @example
+ * <AuthForm mode={"login"|"register"} onLogin={login} onRegister={register} />
+ */
 export const AuthForm: React.FC<AuthFormProps> = ({
   mode,
   onLogin,
@@ -42,66 +52,66 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
   return (
     <div>
-      <h2>{mode}</h2>
-      <form onSubmit={handleSubmit}>
-        {mode === "Login" ? (
-          <div>
-            <label htmlFor="identification">Username or Email</label>
-            <input
-              id="identification"
-              type="text"
-              value={identification}
-              onChange={(e) => setIdentification(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-        ) : (
-          <>
-            <div>
-              <label htmlFor="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-            </div>
+    <h2>{mode}</h2>
+    <form onSubmit={handleSubmit}>
+    {mode === "Login" ? (
+      <div>
+      <label htmlFor="identification">Username or Email</label>
+      <input
+      id="identification"
+      type="text"
+      value={identification}
+      onChange={(e) => setIdentification(e.target.value)}
+      disabled={isLoading}
+      required
+      />
+      </div>
+    ) : (
+    <>
+    <div>
+    <label htmlFor="username">Username</label>
+    <input
+    id="username"
+    type="text"
+    value={username}
+    onChange={(e) => setUsername(e.target.value)}
+    disabled={isLoading}
+    required
+    />
+    </div>
 
-            <div>
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-            </div>
-          </>
-        )}
+    <div>
+    <label htmlFor="email">Email</label>
+    <input
+    id="email"
+    type="email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    disabled={isLoading}
+    required
+    />
+    </div>
+    </>
+    )}
 
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            required
-          />
-        </div>
+    <div>
+    <label htmlFor="password">Password</label>
+    <input
+    id="password"
+    type="password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    disabled={isLoading}
+    required
+    />
+    </div>
 
-        {error && <div>{error}</div>}
+    {error && <div>{error}</div>}
 
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? `${mode}ing...` : mode}
-        </button>
-      </form>
+    <button type="submit" disabled={isLoading}>
+    {isLoading ? `${mode}ing...` : mode}
+    </button>
+    </form>
     </div>
   );
 };

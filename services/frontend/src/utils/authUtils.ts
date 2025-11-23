@@ -37,8 +37,8 @@ export const login = async (
       },
       body: JSON.stringify({ publicKey }),
     });
-		
-		await storePrivateKey(user.id, privateKey);
+
+    await storePrivateKey(user.id, privateKey);
   }
 };
 
