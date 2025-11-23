@@ -10,10 +10,15 @@ import { storeRefreshToken, getRefreshToken } from "../services/tokenService";
 
 const router = Router();
 
+// route to check if api is alive
 router.get("/health", (req, res) =>
   res.json({ ok: true, message: "the authentication api is working properly" }),
 );
 
+/**
+ * auxiliar route used by frontend home and define
+ * if they show the dashboard or the landing page
+ */
 router.get("/me", async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
@@ -50,6 +55,9 @@ router.get("/me", async (req, res) => {
   }
 });
 
+/**
+ * Route to identificate and remember the device on which the user is logged
+ */
 router.post("/add-device-key", async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
@@ -83,6 +91,9 @@ router.post("/add-device-key", async (req, res) => {
   }
 });
 
+/**
+ * Route to refresh user token if valid and he's already authenticated
+ */
 router.post("/refresh", async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
@@ -122,6 +133,9 @@ router.post("/refresh", async (req, res) => {
   }
 });
 
+/**
+ * Route to register new user using userService
+ */
 router.post("/register", async (req, res) => {
   try {
     const { username, password: informedPassword, email, publicKey } = req.body;
@@ -183,6 +197,9 @@ router.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * Route to authenticate user using userService
+ */
 router.post("/login", async (req, res) => {
   try {
     const { identification, password } = req.body;

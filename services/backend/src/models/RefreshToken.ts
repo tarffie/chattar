@@ -11,6 +11,9 @@ export interface IRefreshToken extends Document, Omit<RefreshToken, "userId"> {
   lastUsedAt: Date;
 }
 
+/**
+ * Schema for refresh token used to stabilish and keep connections alive
+ */
 const RefreshTokenSchema = new Schema<IRefreshToken>({
   userId: {
     type: Schema.Types.ObjectId,

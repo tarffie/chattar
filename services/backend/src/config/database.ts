@@ -1,22 +1,30 @@
 import mongoose from "mongoose";
 import "dotenv/config";
 
+// Importing env vars from .env file
 const username = process.env.MONGO_ROOT_USERNAME || "developer";
 const password = process.env.MONGO_ROOT_PASSWORD || "fallback";
 const database = process.env.MONGO_DATABASE || "chattar";
 const host = process.env.MONGO_HOST || "mongodb";
 const port = process.env.MONGO_PORT || "27017";
 
+// building URI to work with database on docker
 const uri = new URL(`mongodb://${host}:${port}/${database}`);
 uri.username = username;
 uri.password = password;
 uri.searchParams.append("authSource", "admin");
 const mongoUri = uri.toString();
 
+// is database connected and working?
 console.log("Mongo URI (redacted):", mongoUri.replace(/\/\/.*@/, "//***@"));
 
+// db object to work with through the api
 let db: mongoose.Connection | null = null;
 
+/**
+ * async function to check if there's a connect or try to stabilish one
+ * connects here so we can just access the database on the rest of the api
+ */
 const connectDB = async (): Promise<typeof mongoose> => {
   if (db && db.readyState === 1) {
     // Already connected

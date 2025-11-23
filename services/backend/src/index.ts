@@ -16,19 +16,22 @@ const io = new Server(server, {
   cors: { origin: "http://localhost:5173" },
 });
 
+// Bun can't handle cookie parsing by itself, this solves
 app.use(cookieParser());
+// Enabling cross origin cors so our frontend can fetch the api
 app.use(cors({ origin: "http://localhost:5173" }));
+
+// built-in middleware to parse incoming requets as json
 app.use(express.json());
-app.get("/", (req, res) => res.send("Chattar Backend Live!"));
 
-import authRoutes from './routes/auth'
-app.use('/api/auth', authRoutes);
+import authRoutes from "./routes/auth";
+app.use("/api/auth", authRoutes);
 
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-  socket.on("disconnect", () => console.log("User disconnected:", socket.id));
-  // TODO: Emit 'user:online' or handle auth handshake
-});
+//io.on("connection", (socket) => {
+//  console.log("User connected:", socket.id);
+//  socket.on("disconnect", () => console.log("User disconnected:", socket.id));
+//  // TODO: Emit 'user:online' or handle auth handshake
+//});
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`🚀 Server on ${PORT}`));
+server.listen(PORT, () => console.log(`Server on ${PORT}`));

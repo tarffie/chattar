@@ -5,6 +5,10 @@ export interface IUser extends Document, Omit<User, "id"> {
   password: string;
 }
 
+/**
+ * Represents a registered device for a user account.
+ * Each device has its own key pair for end-to-end encryption.
+ */
 const DeviceKeySchema = new Schema(
   {
     publicKey: { type: String, required: true },
@@ -14,6 +18,9 @@ const DeviceKeySchema = new Schema(
   { _id: false },
 );
 
+/**
+ * User model for authentication and account management
+ */
 const UserSchema: Schema = new Schema(
   {
     username: { type: String, required: true, unique: true },

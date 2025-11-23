@@ -2,12 +2,27 @@ import connectDB from "../config/database";
 import User from "../models/User";
 import { z } from "zod";
 
-async function hashPassword(password: string) {
+type UserInput = {
+  username: string;
+  informedPassword: string;
+  email: string;
+  publicKey: string;
+};
+
+/**
+ * Hash user password using Bun crypto utilies and the bcrypt algorithm
+ * @param {string} password
+ * @return {Promise<string>} encryptedPassword
+ */
+async function hashPassword(password: string): Promise<string> {
   return await Bun.password.hash(password, {
     algorithm: "bcrypt",
   });
 }
 
+/**
+ * Schema object registration to validify User information
+ */
 const RegisterUserSchema = z.object({
   username: z.string().min(3).max(20),
   informedPassword: z.string().min(6),
@@ -15,12 +30,15 @@ const RegisterUserSchema = z.object({
   publicKey: z.string().min(40), // Rough check for base64 length
 });
 
-const registerUser = async (userInput: {
-  username: string;
-  informedPassword: string;
-  email: string;
-  publicKey: string;
-}) => {
+/**
+ * async function that receives user input information (generally through http request)
+ * validates it and then precceds to input it to the database
+ * @param {UserInput} userInput
+ * @returns {Promise<{string, User}>} Returns if operating succeded and useful user information
+ * @throws {Error|z.ZodError} will fail if userInput isn't according to schema or if username or email was
+ * already taken
+ */
+const registerUser = async (userInput: UserInput) => {
   try {
     const existingUser = await User.findOne({
       $or: [{ username: userInput.username }, { email: userInput.email }],
@@ -69,6 +87,13 @@ const getUserById = async (id: string) => {
   });
 };
 
+/**
+ * async function to update user registered keys on the database
+ * @param {string} userId
+ * @param {string} publicKey user publicKey used for e2e cryptography
+ * @returns {Promise<void>}
+ * @throws {Error} will throw an error if user isn't authenticated or if user doesn't exist
+ */
 const updateUserKeys = async (
   userId: string,
   publicKey: string,
@@ -102,12 +127,35 @@ const updateUserKeys = async (
   }
 };
 
+/**
+ * async function to get user by username or email
+ * @param {string} identification
+ * @return {typeof User} user information as workable data
+ * @throws {Error} Throws an error if user doesn't exist
+ */
 const findUser = async (identification: string) => {
-  return await User.findOne({
-    $or: [{ username: identification }, { email: identification }],
-  });
+  try {
+    const user = await User.findOne({
+      $or: [{ username: identification }, { email: identification }],
+    });
+
+    if (user) {
+      return user;
+    }
+    throw new Error("Couldn't find User");
+  } catch (error) {
+    const { message } = error as Error;
+    throw new Error(message);
+  }
 };
 
+/**
+ * async function to login user with (username|email) and password
+ * @param {string} (username|email) username or email from user
+ * @param {string} password password from user
+ * @returns {Promise<{string,typeof User}>} returns status and user data
+ * @throws {Error} throws an error when having any issue authenticating user
+ */
 const loginUser = async (user: { username: string; password: string }) => {
   try {
     const userData = await findUser(user.username);
