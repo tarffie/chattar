@@ -10,7 +10,7 @@ const port = process.env.MONGO_PORT || "27017";
 
 // building URI to work with database on docker
 const uri = new URL(`mongodb://${host}:${port}/${database}`);
-uri.username = username;
+  uri.username = username;
 uri.password = password;
 uri.searchParams.append("authSource", "admin");
 const mongoUri = uri.toString();
@@ -42,5 +42,4 @@ const connectDB = async (): Promise<typeof mongoose> => {
     process.exit(1);
   }
 };
-
 export default connectDB;

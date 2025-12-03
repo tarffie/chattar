@@ -5,6 +5,9 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import connectDB from "./config/database.js"; // DB import
 import "dotenv/config"; // Loads .env
+import authRoutes from "./routes/auth";
+import { z } from "zod";
+import { errorHandler } from './middleware/errorHandler.ts'
 
 // Connect DB on startup
 connectDB();
@@ -20,12 +23,11 @@ const io = new Server(server, {
 app.use(cookieParser());
 // Enabling cross origin cors so our frontend can fetch the api
 app.use(cors({ origin: "http://localhost:5173" }));
-
 // built-in middleware to parse incoming requets as json
 app.use(express.json());
-
-import authRoutes from "./routes/auth";
 app.use("/api/auth", authRoutes);
+
+app.use(errorHandler);
 
 //io.on("connection", (socket) => {
 //  console.log("User connected:", socket.id);
