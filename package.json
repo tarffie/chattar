@@ -8,7 +8,8 @@
     "shared/*"
   ],
   "scripts": {
-		"install:backend": "bun install --cwd services/backend",
+    "setup": "python scripts/setup.py",
+    "install:backend": "bun install --cwd services/backend",
     "dev": "docker compose up",
     "dev:build": "docker compose up --build",
     "down": "docker compose down",
@@ -21,13 +22,14 @@
     "type-check": "bunx tsc --noEmit"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.10",
-    "concurrently": "^8.2.2",
-    "eslint": "^9.39.1",
+    "@types/jsonwebtoken": "9.0.10",
+    "concurrently": "8.2.2",
+    "eslint": "9.39.1",
     "typescript": "~5.9.3"
   },
   "packageManager": "bun@1.3.0",
   "dependencies": {
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "9.0.2",
+    "prettier": "3.7.4"
   }
 }

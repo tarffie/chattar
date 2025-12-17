@@ -107,12 +107,12 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Frontend - React + TypeScript + Vite (Bun)
-  frontend:
+  # Web - React + TypeScript + Vite (Bun)
+  web:
     build:
-      context: ./services/frontend # New: Subdir context
+      context: ./services/web # New: Subdir context
       dockerfile: Dockerfile
-    container_name: chattar-frontend
+    container_name: chattar-web
     restart: unless-stopped
     ports:
       - "5173:5173"
@@ -120,11 +120,11 @@ services:
       - VITE_API_URL=http://localhost:4000
       - VITE_WS_URL=ws://localhost:4000
     volumes:
-      - ./services/frontend:/workspace/services/frontend # Hot-reload
+      - ./services/web:/workspace/services/web # Hot-reload
       - ./shared:/workspace/shared # If using shared
       - ./package.json:/workspace/package.json # Root package if needed
       - ./bun.lockb:/workspace/bun.lockb
-      - /workspace/services/frontend/node_modules # Avoid host node_modules conflict
+      - /workspace/services/web/node_modules # Avoid host node_modules conflict
     networks:
       - chattar-network
     depends_on:

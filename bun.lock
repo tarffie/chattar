@@ -6,6 +6,7 @@
       "name": "chattar",
       "dependencies": {
         "jsonwebtoken": "^9.0.2",
+        "prettier": "^3.7.4",
       },
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
@@ -38,7 +39,7 @@
         "vitest": "4.0.14",
       },
     },
-    "services/frontend": {
+    "services/web": {
       "name": "@chattar/frontend",
       "version": "0.0.0",
       "dependencies": {
@@ -110,7 +111,7 @@
 
     "@chattar/backend": ["@chattar/backend@workspace:services/backend"],
 
-    "@chattar/frontend": ["@chattar/frontend@workspace:services/frontend"],
+    "@chattar/frontend": ["@chattar/frontend@workspace:services/web"],
 
     "@chattar/types": ["@chattar/types@workspace:shared/types"],
 
@@ -887,6 +888,8 @@
     "postcss-value-parser": ["postcss-value-parser@4.2.0", "", {}, "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ=="],
 
     "prelude-ls": ["prelude-ls@1.2.1", "", {}, "sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g=="],
+
+    "prettier": ["prettier@3.7.4", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA=="],
 
     "proxy-addr": ["proxy-addr@2.0.7", "", { "dependencies": { "forwarded": "0.2.0", "ipaddr.js": "1.9.1" } }, "sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg=="],
 

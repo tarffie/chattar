@@ -8,6 +8,8 @@ chattar.env
 .env
 .env.local
 
+.prettier*
+
 # Logs
 *.log
 logs/
