@@ -1,23 +1,30 @@
-import express from "express";
+import express, { type NextFunction, type Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import connectDB from "./config/database.js"; // DB import
-import "dotenv/config"; // Loads .env
+import connectDB from "./config/database.js"; // db import
+import "dotenv/config"; // Loads env
 import authRoutes from "./routes/auth";
-import { errorHandler } from './middleware/errorHandler.ts'
+import { ZodError } from "zod";
+import { AppError } from "./errors/AppError.ts";
 
-// Connect DB on startup
+// Connect db on startup
 connectDB();
 // App setup
 const app = express();
 
-app.use(cookieParser()); // Bun can't handle cookie parsing by itself, this solves
-app.use(cors({ origin: `${process.env.FRONTEND_ORIGIN}` })); // Enabling cross origin cors so our frontend can fetch the api
-app.use(express.json()); // built-in middleware to parse incoming requets as json
+// Built-in middleware to parse incoming requests as JSON
+app.use(express.json());
+
+// Bun can't handle cookie parsing by itself, this solves
+app.use(cookieParser());
+
+// Allowing requests from other services
+app.use(cors({ origin: `${process.env.WEB_ORIGIN}` }));
+
+// Routes 
 app.use("/api/auth", authRoutes);
-app.use(errorHandler);
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -27,7 +34,7 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
   socket.on("disconnect", () => console.log("User disconnected:", socket.id));
-  // TODO: Emit 'user:online' or handle auth handshake
+  // TO-DO: Emit 'user:online' or handle auth handshake
 });
 
 const PORT = process.env.PORT || 4000;

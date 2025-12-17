@@ -1,18 +1,9 @@
-import connectDB from "../config/database";
 import User from "../models/User";
 import { z } from "zod";
-
-type Result<T> = { success: true; data: T } | { success: false; error: string };
-
-type UserInput = {
-  username: string;
-  informedPassword: string;
-  email: string;
-  publicKey: string;
-};
+import type { RegisterInputSchema as RegisterInput } from "../../../../shared/types";
 
 /**
- * Hash user password using Bun crypto utilies and the bcrypt algorithm
+ * Hash user password using Bun crypto utility and the bcrypt algorithm
  * @param {string} password
  * @return {Promise<string>} encryptedPassword
  */
@@ -27,13 +18,13 @@ async function hashPassword(password: string): Promise<string> {
  */
 const RegisterUserSchema = z.object({
   username: z.string().min(3).max(20),
-  informedPassword: z.string().min(6),
+  password: z.string().min(6),
   email: z.email(),
   publicKey: z.string().min(40), // Rough check for base64 length
 });
 
 /**
- * Schema object registration to validify User information
+ * Schema object registration to validate User information
  */
 const LoginUserSchema = z.object({
   username: z.string().min(1).optional(),
@@ -43,26 +34,33 @@ const LoginUserSchema = z.object({
 
 // register user
 const registerUser = async (
-  userInput: UserInput,
-): Promise<Result<Omit<typeof User.prototype, "password">>> => {
-  const validated = RegisterUserSchema.parse(userInput);
-  if (!validated) throw new Error("The provided user input wasn't valid.");
+  registerInput: RegisterInput,
+): Promise<Omit<typeof User.prototype, "password"> | Error> => {
+
+  const sanitizedUserInput = RegisterUserSchema.parse({
+    username: registerInput.username.toLowerCase(),
+    email: registerInput.email.toLowerCase(),
+    password: registerInput.password,
+    publicKey: registerInput.publicKey,
+  });
+
+  if (!sanitizedUserInput) throw new Error("The informed user input wasn't valid.");
 
   const existingUser = await User.findOne({
-    $or: [{ username: userInput.username }, { email: userInput.email }],
+    $or: [{ username: registerInput.username }, { email: registerInput.email }],
   });
 
   if (existingUser) {
-    if (existingUser.username === userInput.username) {
+    if (existingUser.username === registerInput.username) {
       throw new Error("Username already taken");
     }
-    if (existingUser.email === userInput.email) {
+    if (existingUser.email === registerInput.email) {
       throw new Error("Email already registered");
     }
   }
 
-  const { username, informedPassword, email, publicKey } = userInput;
-  const hashedPassword = await hashPassword(informedPassword);
+  const { username, password, email, publicKey } = registerInput;
+  const hashedPassword = await hashPassword(password);
 
   const newUser = new User({
     username: username,
@@ -73,7 +71,7 @@ const registerUser = async (
   });
 
   await newUser.save();
-  const { password, ...safeUser } = newUser.toJSON();
+  const { password: t, ...safeUser } = newUser.toJSON();
   return { success: true, data: safeUser };
 };
 
@@ -84,7 +82,7 @@ const getUserById = async (id: string) => {
 };
 
 /**
- * async function to update user registered keys on the database
+ * Async function to update user registered keys on the database
  * @param {string} userId
  * @param {string} publicKey user publicKey used for e2e cryptography
  * @returns {Promise<void>}
@@ -114,14 +112,14 @@ const updateUserKeys = async (
 };
 
 /**
- * async function to get user by username or email
+ * Async function to get user by username or email
  * @param {string} identification
  * @return {typeof User} user information as workable data
  * @throws {Error} Throws an error if user doesn't exist
  */
 const findUser = async (
   identification: string,
-): Promise<Result<typeof User.prototype>> => {
+): Promise<typeof User.prototype | Error> => {
   const user = await User.findOne({
     $or: [{ username: identification }, { email: identification }],
   });
@@ -136,45 +134,38 @@ const findUser = async (
 };
 
 /**
- * async function to get users
- */
-const findAllUsers = async (
-) => {
-  const users = await User.find({}).all();
-  console.log(users)
-
-  if (users)
-    return users
-  throw new Error("Something went wrong");
-};
-
-/**
- * async function to login user with (username|email) and password
- * @param {string} (username|email) username or email from user
- * @param {string} password password from user
+ * Async function to login user with (username|email) and password
  * @returns {Promise<{string,typeof User}>} returns status and user data
  * @throws {Error} throws an error when having any issue authenticating user
  */
 const loginUser = async (user: {
   username: string;
   password: string;
-}): Promise<Result<typeof User.prototype>> => {
-  const userData = await findUser(user.username);
+}): Promise<{ success: boolean, user: typeof User.prototype } | Error> => {
+  const credentials = LoginUserSchema.parse(user);
+
+  if (!credentials) {
+    throw new Error("Couldn't parse input");
+  }
+
+  const { username, password } = credentials;
+  const userData = await findUser(username!);
 
   if (!userData.success) {
     throw new Error("Invalid username, email or password");
   }
 
   const isPasswordValid = await Bun.password.verify(
-    user.password,
+    password,
     userData.data!.password,
   );
 
   if (isPasswordValid) {
-    return { success: true, data: userData };
+    return { success: true, user: userData };
+  } else {
+    throw new Error("Invalid username, email or password");
   }
 
-  throw new Error("Invalid username, email or password");
 };
 
-export { registerUser, getUserById, loginUser, updateUserKeys, findAllUsers };
+export { registerUser, getUserById, loginUser, updateUserKeys };

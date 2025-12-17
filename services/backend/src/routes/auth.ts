@@ -1,30 +1,30 @@
-import { Router } from "express";
+import { AppError } from "../errors/AppError";
+import { Router, type Response } from "express";
 import {
   registerUser,
   getUserById,
   loginUser,
   updateUserKeys,
-  findAllUsers,
 } from "../services/userService";
 import jwt from "jsonwebtoken";
 import { storeRefreshToken, getRefreshToken } from "../services/tokenService";
 
 const router = Router();
 
-// route to check if api is alive
-router.get("/health", (req, res) => {
+// Route to check if API is alive
+router.get("/health", (res: Response) => {
   res.json({ ok: true, message: "the authentication api is working properly" })
 });
 
 /**
- * auxiliar route used by frontend home and define
+ * Auxiliary route used by frontend home and define
  * if they show the dashboard or the landing page
  */
 router.get("/me", async (req, res) => {
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
-    return res.status(401).json({ error: "Not authenticated" });
+    res.status(401).json({ error: "Not authenticated" }).send();
   }
 
   const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as {
@@ -34,7 +34,7 @@ router.get("/me", async (req, res) => {
   const user = await getUserById(decoded.userId);
 
   if (!user) {
-    return res.status(401).json({ error: "User not found" });
+    return res.status(401).json({ error: "User not found" }).send();
   }
 
   return res.status(200).json({
@@ -44,11 +44,11 @@ router.get("/me", async (req, res) => {
       email: user.email,
       publicKey: user.publicKey,
     },
-  });
+  }).send();
 });
 
 /**
- * Route to identificate and remember the device on which the user is logged
+ * Route to certificate and remember the device on which the user is logged
  */
 router.post("/add-device-key", async (req, res) => {
   const accessToken = req.cookies.accessToken;
@@ -90,8 +90,8 @@ router.post("/refresh", async (req, res) => {
 
   if (!storedToken || storedToken.expiresAt < new Date()) {
     return res
-    .status(401)
-    .json({ error: "Invalid or expired refresh token" });
+      .status(401)
+      .json({ error: "Invalid or expired refresh token" });
   }
 
   const newAccessToken = jwt.sign(
@@ -110,39 +110,40 @@ router.post("/refresh", async (req, res) => {
 });
 
 /**
- * Route to register new user using userService
+ * Register endpoint 
  */
 router.post("/register", async (req, res) => {
   const { username, password: informedPassword, email, publicKey } = req.body;
 
   // Basic input check (service does deep validation)
   if (!username || !informedPassword || !email || !publicKey) {
-    return res.status(400).json({ error: "Missing fields" });
+    return res.status(400).json({ error: "Missing fields" }).send();
   }
 
   const result = await registerUser({
-    username,
-    informedPassword,
-    email,
-    publicKey,
+    username: username,
+    informedPassword: informedPassword,
+    email: email,
+    publicKey: publicKey,
   });
 
-  if (result.success) {
-    // Generate JWT (stub—add secret from .env)
+  const failed = !!(result instanceof Error);
+
+  if (!failed) {
     const accessToken = jwt.sign(
-      { userId: result.data.safeUser.id },
+      { userId: result.data.id },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" },
     );
 
     const refreshToken = jwt.sign(
-      { userId: result.data.safeUser._id, type: "refresh" },
+      { userId: result.data.id, type: "refresh" },
       process.env.JWT_SECRET!,
       { expiresIn: "90d" },
     );
 
     await storeRefreshToken({
-      userId: result.data.safeUser.id,
+      userId: result.data.id,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
       deviceInfo: req.headers["user-agent"],
@@ -163,41 +164,44 @@ router.post("/register", async (req, res) => {
       maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
     });
 
-    return res.status(201).json({ user: safeUser });
+    return res.status(201).json({ user: result.data }).send();
   }
 
-  return res.status(404).json({ error: result.error });
+  return res.status(404).json({ error: result }).send();
 });
 
 /**
- * Route to authenticate user using userService
+ * Login endpoint
  */
-router.post("/login", async (req, res) => {
+router.post("/login", async (req, res, next) => {
   const { identification, password } = req.body;
 
   if (!identification || !password) {
-    return res.status(400).json({ error: "Missing fields" });
+    next(new AppError(422, "Missing fields"))
   }
 
   const result = await loginUser({
     username: identification,
     password,
   });
-  if (result.success == true) {
+
+  const failed = !!(result instanceof Error)
+
+  if (!failed) {
     const accessToken = jwt.sign(
-      { userId: result.data.userData._id },
+      { userId: result.user.data._id },
       process.env.JWT_SECRET!,
       { expiresIn: "15m" },
     );
 
     const refreshToken = jwt.sign(
-      { userId: result.data.userData.id, type: "refresh" },
+      { userId: result.user.data._id, type: "refresh" },
       process.env.JWT_SECRET!,
       { expiresIn: "90d" },
     );
 
     await storeRefreshToken({
-      userId: result.data.userData._id,
+      userId: result.user.data.id,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
       deviceInfo: req.headers["user-agent"],
@@ -218,10 +222,10 @@ router.post("/login", async (req, res) => {
       maxAge: 90 * 24 * 60 * 60 * 1000, // 90 days
     });
 
-    return res.status(200).json({ user: result.data.userData });
+    return res.status(200).json({ user: result.user.data }).send();
   }
 
-  return res.status(404).json({ error: result.error });
+  return res.status(400).json({ error: result.message })
 });
 
 export default router;
