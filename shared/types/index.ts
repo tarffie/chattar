@@ -54,3 +54,15 @@ export interface PresenceStatus {
   online: boolean;
   lastSeen?: Date;
 }
+
+export type RegisterInputSchema = {
+  username: string;
+  password: string;
+  email: string;
+  publicKey: string;
+};
+
+export type LoginInputSchema = {
+  identification: string;
+  password: string;
+};

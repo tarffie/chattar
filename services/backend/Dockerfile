@@ -1,19 +1,11 @@
-# Backend - Express + TypeScript + Socket.io (Bun on glibc)
-FROM node:20-bookworm-slim
-
-# Install Bun
-RUN apt-get update -qq && \
-    apt-get install -y curl unzip && \
-    curl -fsSL https://bun.sh/install | bash && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    mv /root/.bun /bun
-
-ENV PATH="/bun/bin:$PATH"
+# Backend - Express + TypeScript + Socket.io
+FROM oven/bun:alpine
 
 WORKDIR /workspace/services/backend
 
 # Copy & install local deps
 COPY package.json bun.lockb* ./
+
 RUN bun install
 
 # Copy source
