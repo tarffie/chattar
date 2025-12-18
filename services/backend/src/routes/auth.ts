@@ -54,7 +54,7 @@ router.post("/add-device-key", async (req, res) => {
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
-    return res.status(401).json({ error: "Not authenticated" });
+    return res.status(401).json({ error: "Not authenticated" }).send();
   }
 
   const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as {
@@ -64,11 +64,11 @@ router.post("/add-device-key", async (req, res) => {
   const { publicKey } = req.body;
 
   if (!publicKey) {
-    return res.status(400).json({ error: "Public key is required" });
+    return res.status(400).json({ error: "Public key is required" }).send();
   }
 
   await updateUserKeys(decoded.userId, publicKey);
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true }).send();
 });
 
 /**
@@ -78,7 +78,7 @@ router.post("/refresh", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    return res.status(401).json({ error: "Invalid token type" });
+    return res.status(401).json({ error: "Invalid token type" }).send();
   }
 
   // Verify refresh token
@@ -91,7 +91,7 @@ router.post("/refresh", async (req, res) => {
   if (!storedToken || storedToken.expiresAt < new Date()) {
     return res
       .status(401)
-      .json({ error: "Invalid or expired refresh token" });
+      .json({ error: "Invalid or expired refresh token" }).send();
   }
 
   const newAccessToken = jwt.sign(
@@ -106,23 +106,23 @@ router.post("/refresh", async (req, res) => {
     sameSite: "strict",
     maxAge: 15 * 60 * 1000,
   });
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true }).send();
 });
 
 /**
  * Register endpoint 
  */
 router.post("/register", async (req, res) => {
-  const { username, password: informedPassword, email, publicKey } = req.body;
+  const { username, password: password, email, publicKey } = req.body;
 
   // Basic input check (service does deep validation)
-  if (!username || !informedPassword || !email || !publicKey) {
+  if (!username || !password || !email || !publicKey) {
     return res.status(400).json({ error: "Missing fields" }).send();
   }
 
   const result = await registerUser({
     username: username,
-    informedPassword: informedPassword,
+    password: password,
     email: email,
     publicKey: publicKey,
   });
