@@ -1,39 +1,35 @@
-import { generateKeypair, getPrivateKey, storePrivateKey } from "./cryptoUtils";
+import { generateKeypair, getPrivateKey, storePrivateKey } from './cryptoUtils';
 
 /**
  * Receives two strings and sends a request to the login endpoint
- * @param {string} identification username or email of the user to identify them
+ * @param {string} email username or email of the user to identify them
  * @param {string} password user password
  */
-export const login = async (
-  identification: string,
-  password: string,
-): Promise<void> => {
-  const response = await fetch("/api/auth/login", {
-    method: "POST",
-    credentials: "include",
+export const login = async (email: string, password: string): Promise<void> => {
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    credentials: 'include',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ identification, password }),
+    body: JSON.stringify({ email, password }),
   });
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(data.error || "Login failed");
-  }
 
   const { user } = await response.json();
 
+  if (!user) {
+    throw new Error('Login failed');
+  }
   const existingKey = await getPrivateKey(user.id);
 
   if (!existingKey) {
     const { publicKey, privateKey } = await generateKeypair();
-    await fetch("/api/auth/add-device-key", {
-      method: "POST",
-      credentials: "include",
+
+    await fetch('/api/auth/add-device-key', {
+      method: 'POST',
+      credentials: 'include',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ publicKey }),
     });
@@ -57,15 +53,15 @@ export const register = async (
   const { publicKey, privateKey } = await generateKeypair();
 
   if (!publicKey || !privateKey) {
-    throw new Error("Failed to generate encryption keys");
+    throw new Error('Failed to generate encryption keys');
   }
 
   // Send registration with public key
-  const response = await fetch("/api/auth/register", {
-    method: "POST",
-    credentials: "include",
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    credentials: 'include',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       username,
@@ -76,8 +72,9 @@ export const register = async (
   });
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(data.error || "Registration failed");
+    console.log(response);
+    const { statusText } = response;
+    throw new Error(statusText || 'Registration failed');
   }
 
   const { user } = await response.json();

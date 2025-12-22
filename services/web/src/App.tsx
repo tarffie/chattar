@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
-import type { User } from "../../../shared/types/index";
 import "./App.css";
 import { Home } from "./pages/Home";
+import type { User } from "@chattar/types";
 
 function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [user, setUser] = useState<User>({} as User);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(
-    undefined,
-  );
+  const [user, setUser] = useState<User>();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -16,24 +14,20 @@ function App() {
         const response = await fetch("/api/auth/me", {
           credentials: "include",
         });
-				
-				if (response.ok) {
+
+        if (response.ok) {
           const userData = await response.json();
           setUser(userData);
           setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
         }
-      } catch (error) {
-        // fallback to send user to homepage
-        setIsAuthenticated(false);
+
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, []);
+  }, [user, isAuthenticated]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -41,7 +35,9 @@ function App() {
 
   return (
     <>
-      <div>{isAuthenticated ? <h1>Hello, {user.username}!</h1> : <Home />}</div>
+      <div>
+        {isAuthenticated ? <p> hello, {user?.username} </p> : <Home />}
+      </div>
     </>
   );
 }

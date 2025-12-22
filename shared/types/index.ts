@@ -1,3 +1,4 @@
+import { ERROR_TYPE } from "./enums"
 export interface User {
   id: string;
   username: string;
@@ -66,3 +67,14 @@ export type LoginInputSchema = {
   identification: string;
   password: string;
 };
+
+export type Result<T> =
+  {
+    success: true,
+    data: T
+  }
+  |
+  {
+    success: false,
+    error: { status: number, message: string, type: T }
+  }

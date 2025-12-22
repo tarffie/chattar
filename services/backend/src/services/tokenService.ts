@@ -1,4 +1,4 @@
-import RefreshToken from "../models/RefreshToken";
+import RefreshToken from '../models/RefreshToken';
 
 export const storeRefreshToken = async ({
   userId,
@@ -40,7 +40,7 @@ export const getUserActiveSessions = async (userId: string) => {
   return await RefreshToken.find({
     userId,
     expiresAt: { $gt: new Date() },
-  }).select("deviceInfo ipAddress createdAt lastUsedAt");
+  }).select('deviceInfo ipAddress createdAt lastUsedAt');
 };
 
 export const updateTokenLastUsed = async (token: string) => {

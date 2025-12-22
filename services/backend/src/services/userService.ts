@@ -1,6 +1,7 @@
-import User from "../models/User";
-import { z } from "zod";
-import type { RegisterInputSchema as RegisterInput } from "../../../../shared/types";
+import User from '../models/User';
+import { z } from 'zod';
+import type { RegisterInputSchema as RegisterInput, Result } from '../../../../shared/types';
+import { AppError, ValidatorError } from '../errors/AppError';
 
 /**
  * Hash user password using Bun crypto utility and the bcrypt algorithm
@@ -9,57 +10,58 @@ import type { RegisterInputSchema as RegisterInput } from "../../../../shared/ty
  */
 async function hashPassword(password: string): Promise<string> {
   return await Bun.password.hash(password, {
-    algorithm: "bcrypt",
+    algorithm: 'bcrypt',
   });
 }
 
 /**
  * Schemas
  */
-const RegisterUserSchema = z.object({
-  username: z.string().min(3).max(20),
-  password: z.string().min(6),
-  email: z.email(),
-  publicKey: z.string().min(40), // Rough check for base64 length
-});
+const RegisterUserSchema = z
+  .object({
+    username: z.string().min(3).max(36),
+    password: z.string().min(6),
+    email: z.email(),
+    publicKey: z.string().min(40), // Rough check for base64 length
+  })
+  .strict();
 
 /**
  * Schema object registration to validate User information
  */
 const LoginUserSchema = z.object({
-  username: z.string().min(1).optional(),
-  email: z.email().optional(),
-  password: z.string().min(1),
+  email: z.email(),
+  password: z.string().min(6),
 });
-
 // register user
 const registerUser = async (
   registerInput: RegisterInput,
-): Promise<Omit<typeof User.prototype, "password"> | Error> => {
-
-  const sanitizedUserInput = RegisterUserSchema.parse({
+): Promise<Result<Omit<typeof User.prototype, 'password'>>> => {
+  const parsedUserInput = RegisterUserSchema.parse({
     username: registerInput.username.toLowerCase(),
     email: registerInput.email.toLowerCase(),
     password: registerInput.password,
     publicKey: registerInput.publicKey,
   });
 
-  if (!sanitizedUserInput) throw new Error("The informed user input wasn't valid.");
+  if (!parsedUserInput) {
+    throw new ValidatorError('The informed user input was invalid.');
+  }
 
   const existingUser = await User.findOne({
     $or: [{ username: registerInput.username }, { email: registerInput.email }],
   });
 
   if (existingUser) {
-    if (existingUser.username === registerInput.username) {
-      throw new Error("Username already taken");
-    }
-    if (existingUser.email === registerInput.email) {
-      throw new Error("Email already registered");
+    if (
+      existingUser.username === registerInput.username ||
+      existingUser.email === registerInput.email
+    ) {
+      throw new ValidatorError('Username or email already taken.');
     }
   }
 
-  const { username, password, email, publicKey } = registerInput;
+  const { username, password, email, publicKey } = parsedUserInput;
   const hashedPassword = await hashPassword(password);
 
   const newUser = new User({
@@ -67,10 +69,11 @@ const registerUser = async (
     password: hashedPassword,
     email: email,
     publicKey: publicKey,
-    status: "offline",
+    status: 'offline',
   });
 
   await newUser.save();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password: t, ...safeUser } = newUser.toJSON();
   return { success: true, data: safeUser };
 };
@@ -91,8 +94,8 @@ const getUserById = async (id: string) => {
 const updateUserKeys = async (
   userId: string,
   publicKey: string,
-): Promise<void> => {
-  const result = await User.findByIdAndUpdate(
+): Promise<Result<typeof User.prototype>> => {
+  const user = await User.findByIdAndUpdate(
     userId,
     {
       $push: {
@@ -106,66 +109,52 @@ const updateUserKeys = async (
     { new: true },
   );
 
-  if (!result) {
-    throw new Error("User not found");
+  if (!user) {
+    throw new AppError(404, 'User not found!');
   }
+
+  return { success: true, data: user };
 };
 
 /**
  * Async function to get user by username or email
- * @param {string} identification
+ * @param {string} email
  * @return {typeof User} user information as workable data
  * @throws {Error} Throws an error if user doesn't exist
  */
-const findUser = async (
-  identification: string,
-): Promise<typeof User.prototype | Error> => {
-  const user = await User.findOne({
-    $or: [{ username: identification }, { email: identification }],
-  });
+const findUser = async (email: string): Promise<typeof User.prototype> => {
+  const user = await User.findOne({ email: email });
 
-  if (user) {
-    return {
-      success: true,
-      data: user,
-    };
-  }
-  throw new Error("Couldn't find User");
+  if (user) return user;
+  throw new ValidatorError("Couldn't find User");
 };
 
 /**
- * Async function to login user with (username|email) and password
+ * Async function to login user with email and password
  * @returns {Promise<{string,typeof User}>} returns status and user data
  * @throws {Error} throws an error when having any issue authenticating user
  */
 const loginUser = async (user: {
-  username: string;
+  email: string;
   password: string;
-}): Promise<{ success: boolean, user: typeof User.prototype } | Error> => {
+}): Promise<Result<typeof User.prototype>> => {
   const credentials = LoginUserSchema.parse(user);
-
   if (!credentials) {
     throw new Error("Couldn't parse input");
   }
 
-  const { username, password } = credentials;
-  const userData = await findUser(username!);
+  const { email, password } = credentials;
+  const userData = await findUser(email);
 
-  if (!userData.success) {
-    throw new Error("Invalid username, email or password");
+  if (!userData || userData instanceof ValidatorError) {
+    throw new Error('Invalid email or password');
   }
-
-  const isPasswordValid = await Bun.password.verify(
-    password,
-    userData.data!.password,
-  );
+  const isPasswordValid = await Bun.password.verify(password, userData.password);
 
   if (isPasswordValid) {
-    return { success: true, user: userData };
-  } else {
-    throw new Error("Invalid username, email or password");
+    return { success: true, data: userData };
   }
-
+  throw new ValidatorError('Invalid email or password');
 };
 
 export { registerUser, getUserById, loginUser, updateUserKeys };

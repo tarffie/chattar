@@ -12,17 +12,17 @@ export const Home = () => {
 
   return (
     <>
-    <h1> Hello, world guest </h1>
-    <div className="buttonRow">
-    <HomeButton index={'loginButton'} callbackFn={() => setLoginOrRegister('Login')}>
-    Login
-    </HomeButton>
-    <HomeButton index={'registerButton'} callbackFn={() => setLoginOrRegister('Register')}>
-    Register
-    </HomeButton>
-    <p> {loginOrRegister} </p>
-    </div>
-    <AuthForm mode={loginOrRegister} onLogin={login} onRegister={register} />
+      <h1> Hello, world guest </h1>
+      <div className="buttonRow">
+        <HomeButton index={'loginButton'} callbackFn={() => setLoginOrRegister('Login')}>
+          Login
+        </HomeButton>
+        <HomeButton index={'registerButton'} callbackFn={() => setLoginOrRegister('Register')}>
+          Register
+        </HomeButton>
+        <p> {loginOrRegister} </p>
+      </div>
+      <AuthForm mode={loginOrRegister} onLogin={login} onRegister={register} />
     </>
   );
 };

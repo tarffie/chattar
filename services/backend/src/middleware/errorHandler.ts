@@ -1,30 +1,51 @@
-import type { Response } from "express";
-import { ZodError } from "zod";
-import { AppError } from "../errors/AppError";
+import type { NextFunction, Response } from 'express';
+import { ZodError } from 'zod';
+import { AppError, ValidatorError } from '../errors/AppError';
 
-export const errorHandler = (
+export default function errorHandler(
   err: Error,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  req: Request,
   res: Response,
-) => {
-  console.log("Got and Error for you!");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  next: NextFunction,
+) {
   if (err instanceof ZodError) {
-    return res.status(400).json({
-      success: false,
-      message: "Validation failed",
-      errors: err.issues,
-    }).send();
+    res
+      .status(400)
+      .json({
+        success: false,
+        message: err.issues.map((key) => key.message),
+        errors: err.issues,
+      })
+      .send();
   }
 
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-    }).send();
+    return res
+      .status(err.statusCode)
+      .json({
+        success: false,
+        message: err.message,
+      })
+      .send();
   }
 
-  console.error('Unexpected error:', { error: err });
-  return res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-  }).send();
-};
+  if (err instanceof ValidatorError) {
+    return res
+      .status(err.statusCode)
+      .json({
+        success: false,
+        message: err.message.toUpperCase(),
+      })
+      .send();
+  }
+
+  return res
+    .status(500)
+    .json({
+      success: false,
+      message: 'Internal Server Error',
+    })
+    .send();
+}
