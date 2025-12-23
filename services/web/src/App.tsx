@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import "./App.css";
-import { Home } from "./pages/Home";
-import type { User } from "@chattar/types";
+import { useState, useEffect } from 'react';
+import './App.css';
+import { Home } from './pages/Home';
+import type { User } from '@chattar/types';
 
 function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -9,25 +9,28 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    (async () => {
       try {
-        const response = await fetch("/api/auth/me", {
-          credentials: "include",
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include',
         });
 
         if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setIsAuthenticated(true);
+          const data = await response.json();
+          setTimeout(() => {
+            setUser(data.user);
+            setIsAuthenticated(true);
+          }, 100);
         }
-
+        // Fallback
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
-    };
-
-    checkAuth();
-  }, [user, isAuthenticated]);
+    })();
+  }, []);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -35,9 +38,7 @@ function App() {
 
   return (
     <>
-      <div>
-        {isAuthenticated ? <p> hello, {user?.username} </p> : <Home />}
-      </div>
+      <div>{isAuthenticated ? <p> hello, {user!.username} </p> : <Home />}</div>
     </>
   );
 }

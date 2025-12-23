@@ -33,17 +33,14 @@ router.get('/me', async (req, res, next) => {
       throw new AppError(401, 'User not found');
     }
 
-    return res
-      .status(200)
-      .json({
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          publicKey: user.publicKey,
-        },
-      })
-      .send();
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        publicKey: user.publicKey,
+      },
+    });
   } catch (err) {
     next(err);
   }

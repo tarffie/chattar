@@ -72,7 +72,6 @@ export const register = async (
   });
 
   if (!response.ok) {
-    console.log(response);
     const { statusText } = response;
     throw new Error(statusText || 'Registration failed');
   }

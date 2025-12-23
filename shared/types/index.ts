@@ -78,3 +78,8 @@ export type Result<T> =
     success: false,
     error: { status: number, message: string, type: T }
   }
+
+export interface KeyPair {
+  publicKey: string;
+  privateKey: string;
+}
