@@ -1,77 +1,135 @@
+#!/usr/bin/env python3
 """
-    Script to setup symbolic links and invoke nvm use
+Script to setup symbolic links and invoke nvm use
 """
-#!/bin/python
 
 import pathlib
-import os
 import subprocess
+import sys
+from typing import Optional
 
 ROOT_DIRECTORY = pathlib.Path(__file__).parents[1].resolve()
 
-def find(target):
-    files = os.listdir(ROOT_DIRECTORY)
-    for file in files:
-        if file == target:
-            return True
-            break
-        else:
-            continue
-    return False
+PRETTIER_CONFIG = """{
+\t"semi": true,
+\t"trailingComma": "all",
+\t"singleQuote": true,
+\t"printWidth": 100,
+\t"tabWidth": 2,
+\t"proseWrap": "always",
+\t"bracketSameLine": false,
+\t"jsxBracketSameLine": false
+}"""
 
-def main():
-    print("Locating nvmrc configuration file:")
-    nvmrcExists = find(".nvmrc")
 
-    # Something must be royally wrong 
-    # for this to happen, so nuclear option
-    if not nvmrcExists:
-        print("FILE NOT FOUND")
-        file = str(ROOT_DIRECTORY)+("/.nvmrc") 
-        pathlib.Path(file).open('w')
-        os.popen("node -v >> " + file)
-        home = pathlib.Path("~")
-        subprocess.run(['sh', '-c', str(home) + '/.nvm/nvm.sh', 'use'])
+def ensure_nvmrc() -> None:
+    """Ensure .nvmrc file exists and invoke nvm use."""
+    nvmrc_path = ROOT_DIRECTORY / ".nvmrc"
+    
+    if not nvmrc_path.exists():
+        print("⚠️  .nvmrc not found, creating...")
+        try:
+            # Get current node version and write to .nvmrc
+            result = subprocess.run(
+                ["node", "-v"], 
+                capture_output=True, 
+                text=True, 
+                check=True
+            )
+            nvmrc_path.write_text(result.stdout.strip())
+            print(f"✓ Created .nvmrc with version: {result.stdout.strip()}")
+        except subprocess.CalledProcessError as e:
+            print(f"✗ Error getting node version: {e}", file=sys.stderr)
+            return
+        except FileNotFoundError:
+            print("✗ Node.js not found. Please install Node.js first.", file=sys.stderr)
+            return
     else:
-        print("FILE FOUND")
+        print("✓ .nvmrc found")
 
-    eslintrcExists = find(".prettierrc.json")
-    if not eslintrcExists:
-        file = str(ROOT_DIRECTORY)+("/.prettierc.json") 
-        pathlib.Path(file).open("w").write('{\n\t"semi": "true",\n\t"trailingComma": "all",\n\t"singleQuote": "true",\n\t"printWidth": 100,\n\t"tabWidth": 2,\n\t"proseWrap": "always",\n\t"bracketSameLine": "false",\n\t"jsxBracketSameLine": "false"\n}')
+    # Invoke nvm use
+    try:
+        nvm_path = pathlib.Path.home() / ".nvm" / "nvm.sh"
+        if nvm_path.exists():
+            subprocess.run(
+                ["bash", "-c", f"source {nvm_path} && nvm use"],
+                check=True,
+                shell=False
+            )
+            print("✓ nvm use executed")
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️  Could not run nvm use: {e}", file=sys.stderr)
+
+
+def ensure_prettier_config() -> Optional[pathlib.Path]:
+    """Ensure .prettierrc.json exists in root directory."""
+    prettier_path = ROOT_DIRECTORY / ".prettierrc.json"
+    
+    if not prettier_path.exists():
+        print("⚠️  .prettierrc.json not found, creating...")
+        prettier_path.write_text(PRETTIER_CONFIG)
+        print("✓ Created .prettierrc.json")
+    else:
+        print("✓ .prettierrc.json found")
+    
+    return prettier_path
+
+
+def link_prettier_to_directory(source: pathlib.Path, target_dir: pathlib.Path) -> None:
+    """Create symlink for prettier config in target directory."""
+    target_link = target_dir / ".prettierrc.json"
+    
+    if target_link.exists() or target_link.is_symlink():
+        print(f"  ↷ Symlink already exists: {target_dir.name}")
+        return
+    
+    try:
+        target_link.symlink_to(source)
+        print(f"  ✓ Linked .prettierrc.json to {target_dir.name}")
+    except OSError as e:
+        print(f"  ✗ Failed to create symlink in {target_dir.name}: {e}", file=sys.stderr)
+
+
+def link_prettier_configs(prettier_source: pathlib.Path) -> None:
+    """Link prettier config to all service and shared directories."""
+    
+    # Link to services
+    services_dir = ROOT_DIRECTORY / "services"
+    if services_dir.exists() and services_dir.is_dir():
+        print("\nLinking to services:")
+        for service_dir in services_dir.iterdir():
+            if service_dir.is_dir():
+                link_prettier_to_directory(prettier_source, service_dir)
+    
+    # Link to shared
+    shared_dir = ROOT_DIRECTORY / "shared"
+    if shared_dir.exists() and shared_dir.is_dir():
+        print("\nLinking to shared:")
+        for shared_subdir in shared_dir.iterdir():
+            if shared_subdir.is_dir():
+                link_prettier_to_directory(prettier_source, shared_subdir)
+
+
+def main() -> int:
+    """Main execution function."""
+    print(f"Root directory: {ROOT_DIRECTORY}\n")
+    
+    try:
+        # Setup .nvmrc
+        ensure_nvmrc()
         
-    services_path = str(ROOT_DIRECTORY) + "/services/"
-    services_files = os.listdir(services_path)
-    for service_dir in services_files:
-        service_path = (services_path + service_dir)
-        files = os.listdir(service_path)
-        colisionCheck = list()
-        for file in files:
-            if file == ".prettierrc.json":
-                colisionCheck.append('FOUND SYMLINK AT: '+service_path)
-                break
-        if len(colisionCheck) == 0:
-            print("Linking prettierrc to " + service_dir)
-            print("service_path " + service_path)
-            os.popen("ln -sf "+ str(ROOT_DIRECTORY) +"/.prettierc.json "
-                     + service_path + 
-                     "/.prettierc.json")
+        # Setup prettier config
+        prettier_path = ensure_prettier_config()
+        if prettier_path:
+            link_prettier_configs(prettier_path)
+        
+        print("\n✓ Setup completed successfully")
+        return 0
+        
+    except Exception as e:
+        print(f"\n✗ Setup failed: {e}", file=sys.stderr)
+        return 1
 
-    shared_path = str(ROOT_DIRECTORY) + "/shared/"
-    shared_files = os.listdir(shared_path)
-    for shared_dir in shared_files:
-        shared_path = shared_path + shared_dir
-        files = os.listdir(shared_path)
-        colisionCheck = list()
-        for file in files:
-            if file == ".prettierrc.json":
-                colisionCheck.append('FOUND SYMLINK AT: '+shared_path)
-                break
-        if len(colisionCheck) == 0:
-            print("Linking prettierrc to " + shared_dir)
-            print("shared_path " + shared_path)
-            os.popen("ln -sf "+ str(ROOT_DIRECTORY) +"/.prettierc.json "
-                     + shared_path + 
-                     "/.prettierc.json")
-    print("PROCESS RETURNED OK")
-main()
+
+if __name__ == "__main__":
+    sys.exit(main())

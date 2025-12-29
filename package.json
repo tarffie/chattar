@@ -11,6 +11,7 @@
     "setup": "python scripts/setup.py",
     "dev": "docker compose up",
     "dev:build": "docker compose up --build",
+    "restart": "docker compose restart",
     "restart:dashboard": "docker compose restart dashboard",
     "restart:backend": "docker compose restart backend",
     "restart:web": "docker compose restart web",
@@ -30,9 +31,10 @@
   "packageManager": "bun@1.3.0",
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/chattar": "workspace:*",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4"
+    "eslint-plugin-prettier": "^5.5.4",
+    "@chattar/types": "workspace:*",
+    "@chattar/ui": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5"
