@@ -3,13 +3,11 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import connectDB from './config/database.js'; // db import
+import connectDB from './config/database'; // db import
 import 'dotenv/config'; // Loads env
 import authRoutes from './routes/auth';
 
-// import { errorHandler } from "./middleware/errorHandler.js";
-// import { ZodError } from "zod";
-// import { AppError } from "./errors/AppError.ts";
+const WEB_ORIGIN = process.env.WEB_ORIGIN;
 
 // Connect db on startup
 connectDB();
@@ -18,15 +16,15 @@ const app = express();
 // Middleware callstack
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: `${process.env.WEB_ORIGIN}` }));
+app.use(cors({ origin: WEB_ORIGIN }));
 app.use('/api/auth', authRoutes);
 
-import errorHandler from './middleware/errorHandler.js';
+import errorHandler from './middleware/errorHandler';
 app.use(errorHandler);
 
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: `${process.env.FRONTEND_ORIGIN}` },
+  cors: { origin: WEB_ORIGIN },
 });
 
 io.on('connection', (socket) => {

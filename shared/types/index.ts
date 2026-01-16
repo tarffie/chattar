@@ -1,4 +1,3 @@
-import { ERROR_TYPE } from "./enums"
 export interface User {
   id: string;
   username: string;

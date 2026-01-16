@@ -1,3 +1,4 @@
+// web/tsconfig.json
 {
   "tsrootDir": "../../tsconfig.json",
   "compilerOptions": {
@@ -29,7 +30,7 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src",
+    "src/**/*",
     "vite.config.ts"
   ]
 }

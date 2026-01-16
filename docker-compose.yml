@@ -72,8 +72,8 @@ services:
   # Backend - Express + TypeScript + Socket.io (Bun)
   backend:
     build:
-      context: ./services/backend # New: Subdir context
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/backend/Dockerfile
     container_name: chattar-backend
     restart: unless-stopped
     ports:
@@ -110,8 +110,8 @@ services:
   # Web - React + TypeScript + Vite (Bun)
   web:
     build:
-      context: ./services/web # New: Subdir context
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/web/Dockerfile
     container_name: chattar-web
     restart: unless-stopped
     ports:
@@ -120,11 +120,9 @@ services:
       - VITE_API_URL=http://localhost:4000
       - VITE_WS_URL=ws://localhost:4000
     volumes:
-      - ./services/web:/workspace/services/web # Hot-reload
-      - ./shared:/workspace/shared # If using shared
-      - ./package.json:/workspace/package.json # Root package if needed
-      - ./bun.lockb:/workspace/bun.lockb
-      - /workspace/services/web/node_modules # Avoid host node_modules conflict
+      - ./services/web:/workspace/services/web
+      - ./shared:/workspace/shared
+      - /workspace/services/web/node_modules
     networks:
       - chattar-network
     depends_on:
