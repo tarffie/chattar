@@ -1,4 +1,4 @@
-services:
+apps:
   mongodb:
     image: mongo:7
     container_name: chattar-mongodb
@@ -73,13 +73,13 @@ services:
   backend:
     build:
       context: .
-      dockerfile: services/backend/Dockerfile
+      dockerfile: apps/backend/Dockerfile
     container_name: chattar-backend
     restart: unless-stopped
     ports:
       - "4000:4000"
     env_file:
-      - ./services/backend/.env
+      - ./apps/backend/.env
       - ./.env # Root env vars (Mongo creds)
     environment:
       - NODE_ENV=development
@@ -92,9 +92,9 @@ services:
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
     volumes:
-      - ./services/backend:/workspace/services/backend # Hot-reload
+      - ./apps/backend:/workspace/apps/backend # Hot-reload
       - ./shared:/workspace/shared # Shared types
-      - /workspace/services/backend/node_modules # Avoid host conflict
+      - /workspace/apps/backend/node_modules # Avoid host conflict
     networks:
       - chattar-network
     depends_on:
@@ -111,7 +111,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: services/web/Dockerfile
+      dockerfile: apps/web/Dockerfile
     container_name: chattar-web
     restart: unless-stopped
     ports:
@@ -120,9 +120,9 @@ services:
       - VITE_API_URL=http://localhost:4000
       - VITE_WS_URL=ws://localhost:4000
     volumes:
-      - ./services/web:/workspace/services/web
+      - ./apps/web:/workspace/apps/web
       - ./shared:/workspace/shared
-      - /workspace/services/web/node_modules
+      - /workspace/apps/web/node_modules
     networks:
       - chattar-network
     depends_on:
@@ -137,6 +137,7 @@ services:
   dashboard:
     build:
       context: .
+<<<<<<< HEAD
       dockerfile: services/dashboard/Dockerfile
     container_name: chattar-dashboard
     restart: unless-stopped
@@ -149,6 +150,8 @@ services:
       - ./services/dashboard:/workspace/services/dashboard
       - ./shared:/workspace/shared
       - /workspace/services/web/node_modules
+=======
+>>>>>>> acbde77 (REFACTOR: changed services dir to apps)
     networks:
       - chattar-network
     depends_on:
