@@ -14,11 +14,6 @@ export default defineConfig([
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      eslintPluginPrettierRecommended
-    ],
     files: ['**/*.ts'],
     rules: {
       "no-unused-vars": "off",

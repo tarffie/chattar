@@ -16,7 +16,7 @@ export default defineConfig([
     plugins: { js, tseslint, eslintPluginPrettierRecommended },
     "languageOptions": {
       parserOptions: {
-        project: "./tsconfig.json",
+        project: ["./tsconfig.json", './services/*/tsconfig.json', './shared/*/tsconfig.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -27,11 +27,12 @@ export default defineConfig([
         "tabWidth": 2,
         "quoteProps": "consistent"
       }],
-      "no-unused-vars": "off",
+      "no-unused-vars": "error",
       semi: 'error',
       "no-unused-expressions": "error",
       "prefer-const": "error",
       '@typescript-eslint/no-unused-vars': 'error',
+      'max-len': ["error", { "code": 80, "tabWidth": 4 }]
     },
   },
 ]);

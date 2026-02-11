@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
@@ -17,6 +17,22 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: WEB_ORIGIN }));
+
+/// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use('/health', async (res: Response) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+import mongoose from 'mongoose';
+app.use('/ready', async (res: Response) => {
+  try {
+    await mongoose.connection.db?.admin().ping();
+    res.status(200).json({ status: 'ready' });
+  } catch (err) {
+    const { message } = err as Error;
+    res.status(503).json({ status: 'not ready', message });
+  }
+});
 app.use('/api/auth', authRoutes);
 
 import errorHandler from './middleware/errorHandler';

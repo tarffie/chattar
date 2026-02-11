@@ -18,14 +18,14 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
+    command: redis-backend --appendonly yes
     volumes:
       - redis_data:/data
     networks:
       - chattar-network
 
   loki:
-    image: grafana/loki:2.9.0
+    image: grafana/loki:2.9.2
     container_name: chattar-loki
     restart: unless-stopped
     ports:
@@ -37,7 +37,7 @@ services:
       - chattar-network
 
   promtail:
-    image: grafana/promtail:2.9.0
+    image: grafana/promtail:main
     container_name: chattar-promtail
     restart: unless-stopped
     volumes:
@@ -127,6 +127,33 @@ services:
       - chattar-network
     depends_on:
       - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        
+  # Dashboard app - React + TypeScript + Vite (Bun)
+  dashboard:
+    build:
+      context: .
+      dockerfile: services/dashboard/Dockerfile
+    container_name: chattar-dashboard
+    restart: unless-stopped
+    ports:
+      - "5171:5171"
+    environment:
+      - VITE_API_URL=http://localhost:4000
+      - VITE_WS_URL=ws://localhost:4000
+    volumes:
+      - ./services/dashboard:/workspace/services/dashboard
+      - ./shared:/workspace/shared
+      - /workspace/services/web/node_modules
+    networks:
+      - chattar-network
+    depends_on:
+      - backend
+      - web
     logging:
       driver: json-file
       options:

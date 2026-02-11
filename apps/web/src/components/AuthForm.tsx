@@ -1,14 +1,11 @@
-import React, { useState } from "react";
-
+import { DASHBOARD_SERVICE } from 'process'
+import React, { useContext, useState } from 'react';
+import { AuthContext } from '../AuthContext';
 
 interface AuthFormProps {
-  mode: "Login" | "Register";
+  mode: 'Login' | 'Register';
   onLogin: (identification: string, password: string) => Promise<void>;
-  onRegister: (
-    username: string,
-    email: string,
-    password: string,
-  ) => Promise<void | string>;
+  onRegister: (username: string, email: string, password: string) => Promise<void | string>;
 }
 
 /**
@@ -17,25 +14,29 @@ interface AuthFormProps {
  * @example
  * <AuthForm mode={"login"|"register"} onLogin={login} onRegister={register} />
  */
-export const AuthForm: React.FC<AuthFormProps> = ({
-  mode,
-  onLogin,
-  onRegister,
-}) => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+export const AuthForm: React.FC<AuthFormProps> = ({ mode, onLogin, onRegister }) => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const { refreshAuth } = useContext(AuthContext);
+
+  const handleLoginSuccess = async () => {
+    refreshAuth();
+    window.location.href = DASHBOARD_SERVICE;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsLoading(true);
 
     try {
-      if (mode === "Login") {
+      if (mode === 'Login') {
         await onLogin(email, password);
+        await handleLoginSuccess();
       } else {
         await onRegister(username, email, password);
       }
@@ -50,7 +51,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     <div>
       <h2>{mode}</h2>
       <form onSubmit={handleSubmit}>
-        {mode === "Login" ? (
+        {mode === 'Login' ? (
           <div>
             <label htmlFor="email">Email</label>
             <input

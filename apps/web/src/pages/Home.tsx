@@ -12,7 +12,6 @@ export const Home = () => {
 
   return (
     <>
-      <h1> Hello, world guest </h1>
       <div className="buttonRow">
         <HomeButton index={'loginButton'} callbackFn={() => setLoginOrRegister('Login')}>
           Login
