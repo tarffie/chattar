@@ -5,10 +5,10 @@ RUN apk update && apk upgrade && apk add --no-cache curl
 WORKDIR /workspace
 COPY package.json bun.lockb* ./
 COPY shared ./shared
-COPY services/web ./services/web
+COPY apps/web ./apps/web
 RUN bun install
 
-WORKDIR /workspace/services/web
+WORKDIR /workspace/apps/web
 RUN bun install
 EXPOSE 5173
 

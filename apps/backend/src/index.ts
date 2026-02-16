@@ -1,4 +1,4 @@
-import express, { type Response } from 'express';
+import express, { type Response, type Request } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
@@ -6,6 +6,10 @@ import { Server } from 'socket.io';
 import connectDB from './config/database'; // db import
 import 'dotenv/config'; // Loads env
 import authRoutes from './routes/auth';
+
+if (!process.env.WEB_ORIGIN) {
+  throw new ErrorEvent('Error handling internal values');
+}
 
 const WEB_ORIGIN = process.env.WEB_ORIGIN;
 
@@ -16,23 +20,28 @@ const app = express();
 // Middleware callstack
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: WEB_ORIGIN }));
 
-/// eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use('/health', async (res: Response) => {
-  res.status(200).json({ status: 'ok' });
+app.use(
+  cors({
+    origin: [WEB_ORIGIN, 'http://chattar.homelab'],
+  }),
+);
+
+app.get('/health', async (_req: Request, _res: Response) => {
+  _res.status(200).json({ status: 'ok' });
 });
 
 import mongoose from 'mongoose';
-app.use('/ready', async (res: Response) => {
+app.get('/ready', async (_req: Request, _res: Response) => {
   try {
     await mongoose.connection.db?.admin().ping();
-    res.status(200).json({ status: 'ready' });
+    _res.status(200).json({ status: 'ready' });
   } catch (err) {
     const { message } = err as Error;
-    res.status(503).json({ status: 'not ready', message });
+    _res.status(503).json({ status: 'not ready', message });
   }
 });
+
 app.use('/api/auth', authRoutes);
 
 import errorHandler from './middleware/errorHandler';

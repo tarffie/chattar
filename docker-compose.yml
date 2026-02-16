@@ -1,4 +1,4 @@
-apps:
+services:
   mongodb:
     image: mongo:7
     container_name: chattar-mongodb
@@ -137,8 +137,7 @@ apps:
   dashboard:
     build:
       context: .
-<<<<<<< HEAD
-      dockerfile: services/dashboard/Dockerfile
+      dockerfile: apps/dashboard/Dockerfile
     container_name: chattar-dashboard
     restart: unless-stopped
     ports:
@@ -147,11 +146,9 @@ apps:
       - VITE_API_URL=http://localhost:4000
       - VITE_WS_URL=ws://localhost:4000
     volumes:
-      - ./services/dashboard:/workspace/services/dashboard
+      - ./apps/dashboard:/workspace/apps/dashboard
       - ./shared:/workspace/shared
-      - /workspace/services/web/node_modules
-=======
->>>>>>> acbde77 (REFACTOR: changed services dir to apps)
+      - /workspace/apps/web/node_modules
     networks:
       - chattar-network
     depends_on:

@@ -8,12 +8,12 @@ RUN ["apk","add","--no-cache","curl"]
 WORKDIR /workspace
 COPY package.json bun.lockb* ./
 COPY shared ./shared
-COPY services/dashboard ./services/dashboard
-WORKDIR /workspace/services/dashboard
+COPY apps/dashboard ./apps/dashboard
+WORKDIR /workspace/apps/dashboard
 
 RUN bun install
 
-WORKDIR /workspace/services/dashboard
+WORKDIR /workspace/apps/dashboard
 RUN bun install
 
 EXPOSE 5171

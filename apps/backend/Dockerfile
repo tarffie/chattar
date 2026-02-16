@@ -8,8 +8,8 @@ WORKDIR /app
 
 COPY ./shared /app/shared
 
-COPY ./services/backend/package.json ./services/backend/bun.lockb* /app/
-COPY ./services/backend /app/
+COPY ./apps/backend/package.json ./apps/backend/bun.lockb* /app/
+COPY ./apps/backend /app/
 
 RUN bun install
 
