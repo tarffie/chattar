@@ -69,21 +69,20 @@ services:
     depends_on:
       - loki
 
-  # Backend - Express + TypeScript + Socket.io (Bun)
-  backend:
+  backend-rust:
     build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
-    container_name: chattar-backend
+      context: apps/backend-rust/
+      dockerfile: ./Dockerfile
+    container_name: chattar-backend-rust
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "4040:4040"
     env_file:
-      - ./apps/backend/.env
+      - apps/backend-rust/.env
       - ./.env # Root env vars (Mongo creds)
     environment:
-      - NODE_ENV=development
-      - PORT=4000
+      # - PROJECT_ENV=development
+      - PORT=4040
       - REDIS_URL=redis://redis:6379
       - CORS_ORIGIN=http://localhost:5173
       - MONGO_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
@@ -92,20 +91,49 @@ services:
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
     volumes:
-      - ./apps/backend:/workspace/apps/backend # Hot-reload
-      - ./shared:/workspace/shared # Shared types
-      - /workspace/apps/backend/node_modules # Avoid host conflict
+      - ./apps/backend-rust:/apps/backend-rust # Hot-reload
     networks:
       - chattar-network
     depends_on:
       - mongodb
-      - redis
-      - loki
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+
+  # [Deprecated] Backend - Express + TypeScript + Socket.io (Bun)
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/backend/Dockerfile
+  #   container_name: chattar-backend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "4000:4000"
+  #   env_file:
+  #     - ./apps/backend/.env
+  #     - ./.env # Root env vars (Mongo creds)
+  #   environment:
+  #     - NODE_ENV=development
+  #     - PORT=4000
+  #     - REDIS_URL=redis://redis:6379
+  #     - CORS_ORIGIN=http://localhost:5173
+  #     - MONGO_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+  #     - MONGO_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+  #     - MONGO_DATABASE=${MONGO_INITDB_DATABASE}
+  #     - MONGO_HOST=${MONGO_HOST}
+  #     - MONGO_PORT=${MONGO_PORT}
+  #   volumes:
+  #     - ./apps/backend:/workspace/apps/backend # Hot-reload
+  #     - ./shared:/workspace/shared # Shared types
+  #     - /workspace/apps/backend/node_modules # Avoid host conflict
+  #   networks:
+  #     - chattar-network
+  #   depends_on:
+  #     - mongodb
+  #     - redis
+  #     - loki
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
 
   # Web - React + TypeScript + Vite (Bun)
   web:
@@ -117,8 +145,8 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:4000
-      - VITE_WS_URL=ws://localhost:4000
+      - VITE_API_URL=http://localhost:4040
+      - VITE_WS_URL=ws://localhost:4040
     volumes:
       - ./apps/web:/workspace/apps/web
       - ./shared:/workspace/shared
@@ -126,7 +154,7 @@ services:
     networks:
       - chattar-network
     depends_on:
-      - backend
+      - backend-rust
     logging:
       driver: json-file
       options:
@@ -143,8 +171,8 @@ services:
     ports:
       - "5171:5171"
     environment:
-      - VITE_API_URL=http://localhost:4000
-      - VITE_WS_URL=ws://localhost:4000
+      - VITE_API_URL=http://localhost:4040
+      - VITE_WS_URL=ws://localhost:4040
     volumes:
       - ./apps/dashboard:/workspace/apps/dashboard
       - ./shared:/workspace/shared
@@ -152,8 +180,7 @@ services:
     networks:
       - chattar-network
     depends_on:
-      - backend
-      - web
+      - backend-rust
     logging:
       driver: json-file
       options:

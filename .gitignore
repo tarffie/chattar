@@ -35,3 +35,7 @@ mongodb_data/
 redis_data/
 loki_data/
 grafana_data/
+
+# Rust
+target/
+
