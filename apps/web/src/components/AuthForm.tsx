@@ -1,4 +1,4 @@
-import { DASHBOARD_SERVICE } from 'process'
+import { DASHBOARD_SERVICE } from 'process';
 import React, { useContext, useState } from 'react';
 import { AuthContext } from '../AuthContext';
 
@@ -26,7 +26,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ mode, onLogin, onRegister })
   const handleLoginSuccess = async () => {
     refreshAuth();
     window.location.href = DASHBOARD_SERVICE;
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

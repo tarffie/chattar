@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from "mongoose";
-import type { User } from "../../../../shared/types/index";
+import mongoose, { Schema, Document } from 'mongoose';
+import type { User } from '../../../../shared/types/index';
 
-export interface IUser extends Document, Omit<User, "id"> {
+export interface IUser extends Document, Omit<User, 'id'> {
   password: string;
 }
 
@@ -30,8 +30,8 @@ const UserSchema: Schema = new Schema(
     deviceKeys: { type: [DeviceKeySchema], default: [] },
     status: {
       type: String,
-      enum: ["online", "offline", "busy"],
-      default: "offline",
+      enum: ['online', 'offline', 'busy'],
+      default: 'offline',
     },
   },
   {
@@ -41,4 +41,4 @@ const UserSchema: Schema = new Schema(
   },
 );
 
-export default mongoose.model<IUser>("User", UserSchema);
+export default mongoose.model<IUser>('User', UserSchema);

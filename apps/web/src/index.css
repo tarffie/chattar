@@ -1,4 +1,4 @@
-@layer base, components, utilities;
+@import "tailwindcss";
 
 @layer base {
   :where(html) {

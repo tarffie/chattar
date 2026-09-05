@@ -6,15 +6,19 @@ import { Server } from 'socket.io';
 import connectDB from './config/database'; // db import
 import 'dotenv/config'; // Loads env
 import authRoutes from './routes/auth';
+import process from 'process';
+import console from 'console';
 
 if (!process.env.WEB_ORIGIN) {
-  throw new ErrorEvent('Error handling internal values');
+  throw new Error('Error handling internal values');
 }
 
 const WEB_ORIGIN = process.env.WEB_ORIGIN;
 
 // Connect db on startup
 connectDB();
+
+// App initiliazition
 const app = express();
 
 // Middleware callstack
@@ -29,6 +33,11 @@ app.use(
 
 app.get('/health', async (_req: Request, _res: Response) => {
   _res.status(200).json({ status: 'ok' });
+});
+
+app.post('/publichelper', async (_req: Request, _res: Response) => {
+  console.log('entered the route');
+  _res.status(200).json({ status: 'ok', message: 'hello from inside this bullshit route' });
 });
 
 import mongoose from 'mongoose';

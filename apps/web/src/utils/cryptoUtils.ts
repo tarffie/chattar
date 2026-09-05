@@ -17,11 +17,8 @@ export const generateKeypair = async (): Promise<KeyPair> => {
     ['encrypt', 'decrypt'],
   );
 
-  // Export public key
   const publicKeyBuffer = await window.crypto.subtle.exportKey('spki', keyPair.publicKey);
   const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKeyBuffer)));
-
-  // Export private key
   const privateKeyBuffer = await window.crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
   const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKeyBuffer)));
 

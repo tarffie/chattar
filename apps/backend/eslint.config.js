@@ -1,23 +1,17 @@
+// apps/backend/eslint.config.js
 import { defineConfig } from 'eslint/config';
 import rootConfig from '../../eslint.config.js';
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import "@typescript-eslint/eslint-plugin";
-import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended"
 
+// Just extend root, no need for additional config unless overriding
 export default defineConfig([
   ...rootConfig,
   {
-    "languageOptions": {
+    files: ['**/*.ts'],
+    languageOptions: {
       parserOptions: {
-        project: "./tsconfig.json",
+        project: './tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
       },
-    },
-    files: ['**/*.ts'],
-    rules: {
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error"
     },
   },
 ]);

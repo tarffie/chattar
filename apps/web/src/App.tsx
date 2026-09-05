@@ -4,12 +4,21 @@ import Greeter from './pages/Greeter';
 import type { User } from '@chattar/types';
 import { AuthContext } from './AuthContext';
 
+// For development
+const isDevMode: Boolean = true;
+
 function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User>();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const refreshAuth = useCallback(async () => {
+    if (isDevMode) {
+      setIsAuthenticated(true);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
@@ -20,6 +29,7 @@ function App() {
         setUser(data.user);
         setIsAuthenticated(true);
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setIsAuthenticated(false);
     } finally {
@@ -40,10 +50,10 @@ function App() {
       value={{ user, isAuthenticated, setUser, setIsAuthenticated, refreshAuth }}
     >
       <div>{isAuthenticated ? <p> Well you're authenticated lol </p> : <Greeter />}</div>
-    </AuthContext.Provider >
+    </AuthContext.Provider>
   );
 }
 
-/* 
-*/
+/*
+ */
 export default App;

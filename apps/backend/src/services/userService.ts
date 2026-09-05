@@ -1,3 +1,4 @@
+import Bun, { randomUUIDv7 } from 'bun';
 import User from '../models/User';
 import { z } from 'zod';
 import type { RegisterInputSchema as RegisterInput, Result } from '../../../../shared/types';
@@ -10,7 +11,7 @@ import { AppError, ValidatorError } from '../errors/AppError';
  */
 async function hashPassword(password: string): Promise<string> {
   return await Bun.password.hash(password, {
-    algorithm: 'bcrypt',
+    algorithm: 'argon2id',
   });
 }
 
@@ -101,7 +102,7 @@ const updateUserKeys = async (
       $push: {
         deviceKeys: {
           publicKey,
-          deviceId: crypto.randomUUID(),
+          deviceId: randomUUIDv7(),
           addedAt: new Date(),
         },
       },

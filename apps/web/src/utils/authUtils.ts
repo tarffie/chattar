@@ -1,5 +1,5 @@
 import { generateKeypair, getPrivateKey, storePrivateKey } from './cryptoUtils';
-import 'dotenv/config'
+import 'dotenv/config';
 
 /**
  * Receives two strings and sends a request to the login endpoint
@@ -82,4 +82,3 @@ export const register = async (
   // Store private key locally (NEVER send to server!)
   await storePrivateKey(user.id, privateKey);
 };
-
